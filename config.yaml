@@ -1,0 +1,167 @@
+# Configuration YAML for POPEYE Drone System
+# This file centralizes all system parameters
+
+# System Configuration
+system:
+  on_raspi: false              # Set to true when running on Raspberry Pi
+  debug_mode: true             # Enable debug logging
+  simulation: true             # Running in SITL simulation mode
+
+# Camera Configuration
+camera:
+  use_camera: false            # Use physical camera (false = use video file)
+  debug_visualization: true    # Show debug images with detections
+  frame_width: 1280
+  frame_height: 720
+  fps: 30
+  publish_rate: 20.0           # Hz - frame publish rate
+  
+  # Video file paths for testing
+  test_videos:
+    offset: "videos/test_offset.mp4"
+    offset_diag: "videos/test_offset_diag.mp4"
+    precision: "videos/precision_landing.mp4"
+    precision_straight: "videos/precision_landing_straight.mp4"
+    default: "precision_straight"  # Which video to use by default
+
+# ArUco Detection Configuration
+aruco:
+  dictionary: "DICT_5X5_250"   # ArUco dictionary type
+  marker_ids:
+    park: 5                     # Marker ID for parking/landing pad
+    fire: 222                   # Marker ID for fire target
+  
+  # Camera calibration
+  fov_degrees: 100.0           # Field of view in degrees
+  pixel_to_meter_correction: 1.27  # Calibration correction factor
+  
+  # Detection parameters
+  min_marker_size: 50          # Minimum marker size in pixels
+  max_tilt_angle: 5.0          # Maximum drone tilt for detection (degrees)
+
+# GPS and Navigation
+gps:
+  # Home positions
+  home_positions:
+    sgdb:
+      lat: 48.6126523
+      lon: 2.3963258
+      alt: 0.0
+    duav:
+      lat: 45.4389466
+      lon: -0.4283327
+      alt: 0.0
+    default: "sgdb"            # Which home to use
+  
+  # Navigation parameters
+  default_altitude: 6.0        # Default takeoff altitude (meters)
+  waypoint_radius: 2.0         # Radius to consider waypoint reached (meters)
+  gps_valid_threshold: 0.0001  # Minimum value to consider GPS valid
+  
+  # Earth parameters
+  earth_radius: 6371000.0      # Earth radius in meters
+
+# MAVLink Configuration
+mavlink:
+  # Connection parameters
+  connections:
+    popeye_sitl: "tcp:127.0.0.1:5780"
+    popeye_physical: "/dev/ttyACM0"
+    olive_sitl: "tcp:127.0.0.1:5770"
+    cgs_olive: "tcp:127.0.0.1:5773"
+    cgs_popeye: "tcp:127.0.0.1:5783"
+  
+  baud_rate: 115200
+  
+  # Message intervals (microseconds)
+  message_intervals:
+    statustext: 1000000        # 1 Hz
+    global_position: 1000000   # 1 Hz
+    extended_sys_state: 1000000  # 1 Hz
+    mission_current: 1000000   # 1 Hz
+    attitude: 1000000          # 1 Hz
+  
+  # Timeouts
+  heartbeat_timeout: 10.0      # Seconds to wait for heartbeat
+  command_ack_timeout: 1.5     # Seconds to wait for command acknowledgment
+  reconnect_interval: 5.0      # Seconds between reconnection attempts
+
+# Flight State Machine Configuration
+fsm:
+  # Timeouts (seconds)
+  takeoff_timeout: 30.0
+  landing_timeout: 60.0
+  reposition_timeout: 120.0
+  
+  # Square search parameters
+  search_pattern:
+    intersect_factor: 0.4      # Overlap between search passes
+    delta_lat: 0.0001714106980870156
+    delta_lon: 0.00023963062838783245
+  
+  # Safety parameters
+  max_mission_duration: 600.0  # Maximum mission time (seconds)
+  battery_rtl_threshold: 20.0  # Battery % to trigger RTL
+  
+  # Payload parameters
+  payload:
+    drop_servo_channel: 9
+    drop_pwm: 1150
+    reload_pwm: 1950
+    action_duration: 2.0       # Seconds to wait after drop/reload
+
+# Precision Landing Configuration
+precision_landing:
+  enabled: true
+  final_approach_altitude: 2.0  # Meters
+  hover_time: 3.0               # Seconds to hover before landing
+  position_tolerance: 0.5       # Meters - acceptable position error
+  max_iterations: 10            # Maximum correction iterations
+
+# Logging Configuration
+logging:
+  level: "INFO"                 # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_to_file: true
+  log_directory: "logs/"
+  max_file_size: 10485760       # 10 MB
+  backup_count: 5               # Number of backup log files
+
+# Performance Configuration
+performance:
+  executor_threads: 10          # Number of executor threads
+  max_consecutive_errors: 10    # Max errors before reinitializing
+  
+  # Rate limiters (Hz)
+  rates:
+    image_processing: 20.0
+    gps_publishing: 10.0
+    attitude_publishing: 10.0
+    heartbeat_check: 1.0
+
+# Safety Configuration
+safety:
+  # Geofencing
+  geofence:
+    enabled: true
+    max_distance: 500.0         # Maximum distance from home (meters)
+    max_altitude: 120.0         # Maximum altitude (meters)
+    
+  # Emergency procedures
+  emergency:
+    battery_critical: 10.0      # Battery % for emergency RTL
+    gps_loss_timeout: 10.0      # Seconds before GPS loss action
+    radio_loss_timeout: 20.0    # Seconds before radio loss action
+    
+  # Pre-arm checks
+  prearm_checks:
+    gps_required: true
+    battery_min: 30.0           # Minimum battery % to arm
+    check_tilt: true
+    max_tilt: 5.0               # Maximum tilt angle (degrees)
+
+# Development and Testing
+development:
+  mock_gps: false               # Use simulated GPS data
+  mock_camera: false            # Use simulated camera
+  skip_safety_checks: false     # DANGER: Skip safety checks
+  verbose_mavlink: false        # Log all MAVLink messages
